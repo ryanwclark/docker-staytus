@@ -1,0 +1,35 @@
+#!/usr/bin/with-contenv bash
+
+source /assets/functions/00-container
+PROCESS_NAME="staytus"
+
+sanity_db
+db_ready mariadb
+
+## Perform Configuration Edits
+cp /assets/config/database.yml /app/staytus/config/database.yml
+sed -i -e "s/<DB_HOST>/$DB_HOST/g" /app/staytus/config/database.yml
+sed -i -e "s/<DB_PORT>/$DB_PORT/g" /app/staytus/config/database.yml
+sed -i -e "s/<DB_NAME>/$DB_NAME/g" /app/staytus/config/database.yml
+sed -i -e "s/<DB_USER>/$DB_USER/g" /app/staytus/config/database.yml
+sed -i -e "s/<DB_PASS>/$DB_PASS/g" /app/staytus/config/database.yml
+
+### Theme Support
+if [ -d /assets/staytus ] ; then
+   print_warn "Custom Files Found, Copying over top of Master.."
+   cp -R /assets/staytus/* /app/staytus/
+fi
+
+cd /app/staytus
+
+## Fix Production.rb Log Issue
+if [ "$RAILS_ENV" = "production" ];  then 
+    sed -i -e "s/config.log_level = :debug/config.log_level = :warn/g" /app/staytus/config/environments/production.rb
+	if [ "DEBUG_MODE" = "true" ] || [ "DEBUG_MODE" = "TRUE" ];  then
+	  sed -i -e "s/config.log_level = :warn/config.log_level = :debug/g" /app/staytus/config/environments/production.rb
+	fi
+fi
+
+bundle exec rake staytus:build staytus:install
+
+liftoff
