@@ -1,4 +1,4 @@
-FROM ryanwclark/ruby:2.6-alpine
+FROM ryanwclark/ruby:3-alpine
 LABEL maintainer="Ryan Clark (ryanwclark@yahoo.com)"
 
 ## Install Packages
